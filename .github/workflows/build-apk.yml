@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "main", "master" ]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,21 +43,30 @@ jobs:
     - name: Build APK
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
-        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
-        cat build.log
+        gradle assembleDebug --no-daemon --stacktrace
+
+    - name: Find APK
+      run: |
+        echo "=== Searching for APK ==="
+        find . -name "*.apk" -type f 2>/dev/null
+        APK_PATH=$(find . -name "app-debug.apk" -type f 2>/dev/null | head -1)
+        echo "FOUND_APK=$APK_PATH" >> $GITHUB_ENV
+        echo "APK path: $APK_PATH"
 
     - name: Upload APK
-      if: success()
+      if: env.FOUND_APK != ''
       uses: actions/upload-artifact@v4
       with:
         name: ChatApp-Debug-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: ${{ env.FOUND_APK }}
         retention-days: 7
 
-    - name: Upload Build Log
+    - name: Debug - List build outputs
       if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: Build-Log
-        path: build.log
-        retention-days: 3
+      run: |
+        echo "=== All APK files found ==="
+        find . -name "*.apk" -type f
+        echo "=== Build directory ==="
+        ls -la app/build/outputs/apk/ 2>/dev/null || echo "No apk directory"
+        echo "=== Full build tree ==="
+        find app/build -type f 2>/dev/null | head -20
