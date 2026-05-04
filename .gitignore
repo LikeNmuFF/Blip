@@ -5,10 +5,8 @@ build/
 local.properties
 *.apk
 *.aab
-gradle/wrapper/*.zip
-.gradle/
 build.log
-local.properties
-build/
-*.iml
-.idea/
+
+# Gradle wrapper - keep the jar, ignore downloaded zips
+gradle/wrapper/*.zip
+!gradle/wrapper/gradle-wrapper.jar
