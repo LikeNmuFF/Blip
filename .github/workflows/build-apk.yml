@@ -20,27 +20,28 @@ jobs:
 
     - name: Setup Android SDK
       run: |
-        export ANDROID_SDK_ROOT=$HOME/android-sdk
-        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-        cd $ANDROID_SDK_ROOT/cmdline-tools
-        curl -o sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-        unzip -q sdk-tools.zip
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
+        curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o tools.zip
+        unzip -q tools.zip
         mv cmdline-tools latest
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
-        echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-        echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        export ANDROID_HOME=$HOME/android-sdk
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
+        echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
 
     - name: Download Gradle
       run: |
-        curl -L https://services.gradle.org/distributions/gradle-8.2-bin.zip -o gradle.zip
+        curl -sL https://services.gradle.org/distributions/gradle-8.2-bin.zip -o gradle.zip
         unzip -q gradle.zip
         echo "$(pwd)/gradle-8.2/bin" >> $GITHUB_PATH
 
     - name: Build APK
       run: |
-        echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
-        gradle assembleDebug --stacktrace
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+        cat build.log
 
     - name: Upload APK
       if: success()
@@ -49,3 +50,11 @@ jobs:
         name: ChatApp-Debug-APK
         path: app/build/outputs/apk/debug/app-debug.apk
         retention-days: 7
+
+    - name: Upload Build Log
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Build-Log
+        path: build.log
+        retention-days: 3
