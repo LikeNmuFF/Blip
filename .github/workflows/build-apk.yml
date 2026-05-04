@@ -29,30 +29,31 @@ jobs:
         unzip -q tools.zip
         mv cmdline-tools latest
         export ANDROID_HOME=$HOME/android-sdk
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
+        echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
+        
+        # Accept licenses and install required components
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
 
-    - name: Download Gradle
+    - name: Create local.properties
       run: |
-        curl -sL https://services.gradle.org/distributions/gradle-8.2-bin.zip -o gradle.zip
-        unzip -q gradle.zip
-        echo "$(pwd)/gradle-8.2/bin" >> $GITHUB_PATH
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        cat local.properties
 
     - name: Build APK
       run: |
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
-        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build-output.log || true
+        ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build-output.log || true
 
     - name: List ALL build outputs
       run: |
-        echo "=== Full tree ==="
-        find . -type f -name "*.apk" 2>/dev/null || echo "No APKs found"
-        echo "=== app/build tree ==="
-        find app/build -type f 2>/dev/null || echo "No app/build found"
-        echo "=== All outputs ==="
-        find . -path "*/outputs/apk/*" -type f 2>/dev/null || echo "No apk outputs found"
+        echo "=== Searching for APKs ==="
+        find . -name "*.apk" -type f 2>/dev/null || echo "No APKs"
+        echo "=== app/build contents ==="
+        ls -la app/build/ 2>/dev/null || echo "No app/build"
+        echo "=== app/build/outputs ==="
+        find app/build -type f 2>/dev/null | head -30 || echo "Nothing"
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -60,6 +61,8 @@ jobs:
         name: ChatApp-Debug-APK
         path: |
           **/*.apk
+          app/build/outputs/**/*.apk
+        if-no-files-found: warn
         retention-days: 7
 
     - name: Upload Build Log
