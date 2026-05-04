@@ -4,9 +4,6 @@ on:
   push:
     branches: [ "main", "master" ]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,11 +28,12 @@ jobs:
         export ANDROID_HOME=$HOME/android-sdk
         echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
         echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
-        echo "PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
         
-        # Accept licenses and install required components
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
         $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools"
+
+    - name: Make Gradlew Executable
+      run: chmod +x ./gradlew
 
     - name: Create local.properties
       run: |
@@ -44,26 +42,21 @@ jobs:
 
     - name: Build APK
       run: |
-        chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build-output.log || true
+        ./gradlew --version
+        ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build-output.log || true
 
-    - name: List ALL build outputs
+    - name: Find APK
       run: |
-        echo "=== Searching for APKs ==="
-        find . -name "*.apk" -type f 2>/dev/null || echo "No APKs"
-        echo "=== app/build contents ==="
-        ls -la app/build/ 2>/dev/null || echo "No app/build"
-        echo "=== app/build/outputs ==="
-        find app/build -type f 2>/dev/null | head -30 || echo "Nothing"
+        find . -name "*.apk" -type f 2>/dev/null
+        APK=$(find . -name "app-debug.apk" -type f 2>/dev/null | head -1)
+        echo "FOUND_APK=$APK" >> $GITHUB_ENV
 
     - name: Upload APK
+      if: env.FOUND_APK != ''
       uses: actions/upload-artifact@v4
       with:
         name: ChatApp-Debug-APK
-        path: |
-          **/*.apk
-          app/build/outputs/**/*.apk
-        if-no-files-found: warn
+        path: ${{ env.FOUND_APK }}
         retention-days: 7
 
     - name: Upload Build Log

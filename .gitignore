@@ -5,3 +5,10 @@ build/
 local.properties
 *.apk
 *.aab
+gradle/wrapper/*.zip
+.gradle/
+build.log
+local.properties
+build/
+*.iml
+.idea/
