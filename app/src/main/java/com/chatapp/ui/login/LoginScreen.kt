@@ -3,6 +3,8 @@ package com.chatapp.ui.login
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,7 +40,7 @@ fun LoginScreen(
     
     Scaffold(
         topBar = {
-            CenterTopAppBar(title = { Text("Welcome Back") })
+            CenterAlignedTopAppBar(title = { Text("Welcome Back") })
         }
     ) { padding ->
         Column(
@@ -50,7 +52,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                icon = androidx.compose.material.icons.Icons.Default.Chat,
+                imageVector = Icons.Default.Chat,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.primary

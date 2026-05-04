@@ -4,6 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,15 +29,17 @@ fun RoomListScreen(
     onRoomClick: (Room) -> Unit,
     onLogout: () -> Unit,
     viewModel: RoomViewModel = viewModel(
-        factory = RoomViewModelFactory(androidx.compose.ui.platform.LocalContext.current)
+        factory = RoomViewModelFactory(
+            androidx.compose.ui.platform.LocalContext.current
+        )
     )
 ) {
     val state by viewModel.state.collectAsState()
-    
+
     LaunchedEffect(Unit) {
         viewModel.loadRooms()
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -37,13 +47,13 @@ fun RoomListScreen(
                 actions = {
                     IconButton(onClick = { viewModel.loadRooms() }) {
                         Icon(
-                            icon = androidx.compose.material.icons.Icons.Default.Refresh,
+                            imageVector = Icons.Default.Refresh,
                             contentDescription = "Refresh"
                         )
                     }
                     IconButton(onClick = onLogout) {
                         Icon(
-                            icon = androidx.compose.material.icons.Icons.Default.Logout,
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
                             contentDescription = "Logout"
                         )
                     }
@@ -51,47 +61,57 @@ fun RoomListScreen(
             )
         }
     ) { padding ->
-        if (state.isLoading && state.rooms.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
-        } else if (state.error != null && state.rooms.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        icon = androidx.compose.material.icons.Icons.Default.Error,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(64.dp)
+        when {
+            state.isLoading && state.rooms.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Failed to load rooms", color = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = { viewModel.loadRooms() }) {
-                        Text("Retry")
+                }
+            }
+            state.error != null && state.rooms.isEmpty() -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "Failed to load rooms",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.loadRooms() }) {
+                            Text("Retry")
+                        }
                     }
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(state.rooms) { room ->
-                    RoomCard(room = room, onClick = { onRoomClick(room) })
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.rooms) { room ->
+                        RoomCard(
+                            room = room,
+                            onClick = { onRoomClick(room) }
+                        )
+                    }
                 }
             }
         }
@@ -104,7 +124,9 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
         Row(
             modifier = Modifier
@@ -128,10 +150,10 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Icon(
-                        icon = when {
-                            room.isGlobal -> androidx.compose.material.icons.Icons.Default.Public
-                            room.isPrivate -> androidx.compose.material.icons.Icons.Default.Lock
-                            else -> androidx.compose.material.icons.Icons.Default.Chat
+                        imageVector = when {
+                            room.isGlobal -> Icons.Default.Public
+                            room.isPrivate -> Icons.Default.Lock
+                            else -> Icons.AutoMirrored.Filled.Chat
                         },
                         contentDescription = null,
                         tint = Color.White,
@@ -139,7 +161,7 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
                     )
                 }
             }
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = room.name,
@@ -154,9 +176,9 @@ fun RoomCard(room: Room, onClick: () -> Unit) {
                     maxLines = 2
                 )
             }
-            
+
             Icon(
-                icon = androidx.compose.material.icons.Icons.Default.ArrowForwardIos,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
                 tint = Color.Gray,
                 modifier = Modifier.size(16.dp)

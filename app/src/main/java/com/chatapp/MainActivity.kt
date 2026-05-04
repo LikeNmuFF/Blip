@@ -9,6 +9,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -17,7 +19,9 @@ import com.chatapp.data.local.TokenStorage
 import com.chatapp.data.network.RetrofitClient
 import com.chatapp.data.network.SocketService
 import com.chatapp.ui.AuthViewModel
+import com.chatapp.ui.AuthViewModelFactory
 import com.chatapp.ui.RoomViewModel
+import com.chatapp.ui.RoomViewModelFactory
 import com.chatapp.ui.chat.ChatRoomScreen
 import com.chatapp.ui.login.LoginScreen
 import com.chatapp.ui.register.RegisterScreen
@@ -53,11 +57,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ChatApp() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(applicationContext)
+        factory = AuthViewModelFactory(context.applicationContext)
     )
     val roomViewModel: RoomViewModel = viewModel(
-        factory = RoomViewModelFactory(applicationContext)
+        factory = RoomViewModelFactory(context.applicationContext)
     )
     
     val authState by authViewModel.state.collectAsState()
