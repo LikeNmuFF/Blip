@@ -43,26 +43,23 @@ jobs:
     - name: Build APK
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
-        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build-output.log
-        echo "BUILD_EXIT_CODE=$?" >> $GITHUB_ENV
+        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build-output.log || true
 
-    - name: Show Build Output
-      run: cat build-output.log
-
-    - name: Find APK
+    - name: List ALL build outputs
       run: |
-        echo "=== Searching for APK ==="
-        find . -name "*.apk" -type f 2>/dev/null
-        APK_PATH=$(find . -name "*.apk" -type f 2>/dev/null | head -1)
-        echo "FOUND_APK=$APK_PATH" >> $GITHUB_ENV
-        echo "APK: $APK_PATH"
+        echo "=== Full tree ==="
+        find . -type f -name "*.apk" 2>/dev/null || echo "No APKs found"
+        echo "=== app/build tree ==="
+        find app/build -type f 2>/dev/null || echo "No app/build found"
+        echo "=== All outputs ==="
+        find . -path "*/outputs/apk/*" -type f 2>/dev/null || echo "No apk outputs found"
 
     - name: Upload APK
-      if: env.FOUND_APK != ''
       uses: actions/upload-artifact@v4
       with:
         name: ChatApp-Debug-APK
-        path: ${{ env.FOUND_APK }}
+        path: |
+          **/*.apk
         retention-days: 7
 
     - name: Upload Build Log
