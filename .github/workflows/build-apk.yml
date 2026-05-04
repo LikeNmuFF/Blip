@@ -44,6 +44,7 @@ jobs:
 
     - name: Build APK
       run: |
+        chmod +x gradlew
         ./gradlew assembleDebug --no-daemon --stacktrace --info 2>&1 | tee build-output.log || true
 
     - name: List ALL build outputs
