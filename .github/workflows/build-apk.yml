@@ -43,15 +43,19 @@ jobs:
     - name: Build APK
       run: |
         echo "sdk.dir=$ANDROID_HOME" > local.properties
-        gradle assembleDebug --no-daemon --stacktrace
+        gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee build-output.log
+        echo "BUILD_EXIT_CODE=$?" >> $GITHUB_ENV
+
+    - name: Show Build Output
+      run: cat build-output.log
 
     - name: Find APK
       run: |
         echo "=== Searching for APK ==="
         find . -name "*.apk" -type f 2>/dev/null
-        APK_PATH=$(find . -name "app-debug.apk" -type f 2>/dev/null | head -1)
+        APK_PATH=$(find . -name "*.apk" -type f 2>/dev/null | head -1)
         echo "FOUND_APK=$APK_PATH" >> $GITHUB_ENV
-        echo "APK path: $APK_PATH"
+        echo "APK: $APK_PATH"
 
     - name: Upload APK
       if: env.FOUND_APK != ''
@@ -61,12 +65,10 @@ jobs:
         path: ${{ env.FOUND_APK }}
         retention-days: 7
 
-    - name: Debug - List build outputs
-      if: failure()
-      run: |
-        echo "=== All APK files found ==="
-        find . -name "*.apk" -type f
-        echo "=== Build directory ==="
-        ls -la app/build/outputs/apk/ 2>/dev/null || echo "No apk directory"
-        echo "=== Full build tree ==="
-        find app/build -type f 2>/dev/null | head -20
+    - name: Upload Build Log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Build-Log
+        path: build-output.log
+        retention-days: 7
