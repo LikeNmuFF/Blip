@@ -3,6 +3,7 @@ package com.chatapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.view.WindowCompat
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,6 +33,9 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Let Compose handle system window insets natively
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         
         RetrofitClient.init(this)
         

@@ -1,7 +1,9 @@
 package com.chatapp.ui.login
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -43,100 +45,112 @@ fun LoginScreen(
             CenterAlignedTopAppBar(title = { Text("Welcome Back") })
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .imePadding(),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Chat,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "Sign in to continue chatting",
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            if (state.error != null) {
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = state.error!!,
-                        modifier = Modifier.padding(12.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Username") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { viewModel.login(username, password) }
-                )
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Button(
-                onClick = { viewModel.login(username, password) },
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                enabled = !state.isLoading && username.isNotBlank() && password.isNotBlank()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Login", style = MaterialTheme.typography.titleMedium)
+                Icon(
+                    imageVector = Icons.Default.Chat,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Sign in to continue chatting",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                if (state.error != null) {
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = state.error!!,
+                            modifier = Modifier.padding(12.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row {
-                Text("Don't have an account? ", color = Color.Gray)
-                TextButton(onClick = onNavigateToRegister) {
-                    Text("Sign Up", color = MaterialTheme.colorScheme.primary)
+                
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { viewModel.login(username, password) }
+                    )
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Button(
+                    onClick = { viewModel.login(username, password) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    enabled = !state.isLoading && username.isNotBlank() && password.isNotBlank(),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.5.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text("Login", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text("Don't have an account? ", color = Color.Gray)
+                    TextButton(onClick = onNavigateToRegister) {
+                        Text("Sign Up", color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         }
