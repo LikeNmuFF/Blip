@@ -168,10 +168,10 @@ fun ChatRoomScreen(
                     modifier = Modifier.weight(1f),
                     state = listState,
                     reverseLayout = false,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp)
                 ) {
-                    items(state.messages, key = { it.id }) { message ->
+                    items(state.messages) { message ->
                         MessageBubble(message = message)
                     }
                 }
@@ -259,20 +259,20 @@ fun MessageBubble(message: Message) {
                 shadowElevation = 0.5.dp
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = message.content,
-                        fontSize = 14.sp,
-                        lineHeight = 18.sp,
+                        fontSize = 13.sp,
+                        lineHeight = 17.sp,
                         color = if (isMe) Color.White else Color(0xFF2D2D2D)
                     )
                     
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(1.dp))
                     
                     Text(
                         text = formatTime(message.createdAt),
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         color = if (isMe) Color.White.copy(alpha = 0.7f) else Color.Gray,
                         modifier = Modifier.align(Alignment.End)
                     )
@@ -289,14 +289,14 @@ fun MessageInputBar(
     onSend: () -> Unit
 ) {
     Surface(
-        tonalElevation = 4.dp,
+        tonalElevation = 2.dp,
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.navigationBarsPadding()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 6.dp, vertical = 6.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             OutlinedTextField(
@@ -304,30 +304,30 @@ fun MessageInputBar(
                 onValueChange = onTextChange,
                 modifier = Modifier
                     .weight(1f)
-                    .heightIn(min = 44.dp, max = 120.dp),
+                    .heightIn(min = 40.dp, max = 100.dp),
                 placeholder = {
                     Text(
                         "Message...",
                         color = Color.Gray,
-                        fontSize = 14.sp
+                        fontSize = 13.sp
                     )
                 },
-                shape = RoundedCornerShape(22.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
                     unfocusedBorderColor = Color(0xFFE0E0E0),
                     focusedContainerColor = Color(0xFFFAFAFA),
                     unfocusedContainerColor = Color(0xFFFAFAFA)
                 ),
-                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
+                textStyle = LocalTextStyle.current.copy(fontSize = 13.sp),
                 maxLines = 4
             )
             
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             
             FloatingActionButton(
                 onClick = onSend,
-                modifier = Modifier.size(44.dp),
+                modifier = Modifier.size(40.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
                 shape = CircleShape
             ) {
@@ -336,7 +336,7 @@ fun MessageInputBar(
                     contentDescription = "Send",
                     tint = Color.White,
                     modifier = Modifier
-                        .size(20.dp)
+                        .size(18.dp)
                         .padding(start = 2.dp)
                 )
             }

@@ -153,7 +153,8 @@ fun ChatApp() {
                 ChatRoomScreen(
                     roomId = roomId,
                     roomName = roomName,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    viewModel = roomViewModel
                 )
             }
         }
