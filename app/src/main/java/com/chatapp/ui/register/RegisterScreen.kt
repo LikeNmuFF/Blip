@@ -3,10 +3,15 @@ package com.chatapp.ui.register
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -246,9 +251,9 @@ fun RegisterScreen(
                         ) {
                             Icon(
                                 imageVector = if (passwordsMatch)
-                                    androidx.compose.material.icons.Icons.Default.CheckCircle
+                                    Icons.Default.CheckCircle
                                 else
-                                    androidx.compose.material.icons.Icons.Default.Close,
+                                    Icons.Default.Close,
                                 contentDescription = null,
                                 tint = if (passwordsMatch)
                                     Color(0xFF06D6A0)
@@ -276,7 +281,7 @@ fun RegisterScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.Error,
+                                    imageVector = Icons.Default.Error,
                                     contentDescription = null,
                                     tint = if (isDark) Color(0xFFF87171) else Color(0xFFEF4444),
                                     modifier = Modifier.size(18.dp)

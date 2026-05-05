@@ -9,8 +9,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,8 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -120,7 +124,7 @@ fun RoomListScreen(
                         }
                         IconButton(onClick = onLogout) {
                             Icon(
-                                imageVector = Icons.Default.Logout,
+                                imageVector = Icons.Default.ExitToApp,
                                 contentDescription = "Logout",
                                 tint = if (isDark) Color(0xFFF87171) else Color(0xFFEF4444)
                             )
@@ -342,7 +346,7 @@ fun RoomCard(room: Room, onClick: () -> Unit, isDark: Boolean = false) {
             Spacer(modifier = Modifier.width(8.dp))
 
             Icon(
-                imageVector = androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowForward,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
                 tint = if (isDark) Color(0xFF475569) else Color(0xFFCBD5E1),
                 modifier = Modifier.size(18.dp)
