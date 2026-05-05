@@ -51,23 +51,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            // Check if ThemeManager/ChatAppTheme exist, use them if available
-            try {
-                val themeManager = com.chatapp.data.local.ThemeManager(applicationContext)
-                val isDark by themeManager.isDarkMode.collectAsState(initial = false)
-                com.chatapp.ui.theme.ChatAppTheme(darkTheme = isDark) {
-                    ChatApp()
-                }
-            } catch (e: Exception) {
-                MaterialTheme(
-                    colorScheme = lightColorScheme(
-                        primary = androidx.compose.ui.graphics.Color(0xFF6C63FF),
-                        secondary = androidx.compose.ui.graphics.Color(0xFF03DAC6),
-                        tertiary = androidx.compose.ui.graphics.Color(0xFFFF4081)
-                    )
-                ) {
-                    ChatApp()
-                }
+            val themeManager = com.chatapp.data.local.ThemeManager(applicationContext)
+            val isDark by themeManager.isDarkMode.collectAsState(initial = false)
+            com.chatapp.ui.theme.ChatAppTheme(darkTheme = isDark) {
+                ChatApp()
             }
         }
     }

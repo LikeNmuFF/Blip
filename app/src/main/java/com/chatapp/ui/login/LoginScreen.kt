@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chatapp.data.local.ThemeManager
 import com.chatapp.ui.AuthViewModel
 import com.chatapp.ui.AuthViewModelFactory
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,7 +161,7 @@ fun LoginScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .graphicsLayer { elevation = cardElevation.value }
+                    .graphicsLayer { shadowElevation = cardElevation.value }
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)),
                 color = surfaceColor,
                 shadowElevation = 4.dp
@@ -326,7 +327,11 @@ fun LoginScreen(
                     )
                     Switch(
                         checked = isDark,
-                        onCheckedChange = { themeManager.setDarkMode(it) },
+                        onCheckedChange = { value ->
+                            kotlinx.coroutines.MainScope().launch {
+                                themeManager.setDarkMode(value)
+                            }
+                        },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = Color(0xFF3B82F6),

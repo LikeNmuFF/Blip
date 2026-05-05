@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,15 +33,18 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chatapp.data.local.ThemeManager
 import com.chatapp.data.model.Room
+import com.chatapp.data.model.User
 import com.chatapp.ui.RoomViewModel
 import com.chatapp.ui.RoomViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomListScreen(
+    currentUser: User? = null,
     onRoomClick: (Room) -> Unit,
     onLogout: () -> Unit,
     onCreateRoom: () -> Unit,
+    onProfileClick: () -> Unit = {},
     viewModel: RoomViewModel = viewModel(
         factory = RoomViewModelFactory(LocalContext.current)
     )
