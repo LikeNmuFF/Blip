@@ -4,15 +4,17 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.view.WindowCompat
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -26,6 +28,7 @@ import com.chatapp.ui.RoomViewModel
 import com.chatapp.ui.RoomViewModelFactory
 import com.chatapp.ui.chat.ChatRoomScreen
 import com.chatapp.ui.login.LoginScreen
+import com.chatapp.ui.profile.ProfileScreen
 import com.chatapp.ui.register.RegisterScreen
 import com.chatapp.ui.rooms.CreateRoomScreen
 import com.chatapp.ui.rooms.RoomListScreen
@@ -35,22 +38,37 @@ import kotlinx.coroutines.runBlocking
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Let Compose handle system window insets natively
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        
+
         RetrofitClient.init(this)
-        
-        // Restore token if available
+
         runBlocking {
             val token = TokenStorage(this@MainActivity).token.first()
             if (token != null) {
                 RetrofitClient.setToken(token)
             }
         }
-        
+
         setContent {
-            ChatApp()
+            // Check if ThemeManager/ChatAppTheme exist, use them if available
+            try {
+                val themeManager = com.chatapp.data.local.ThemeManager(applicationContext)
+                val isDark by themeManager.isDarkMode.collectAsState(initial = false)
+                com.chatapp.ui.theme.ChatAppTheme(darkTheme = isDark) {
+                    ChatApp()
+                }
+            } catch (e: Exception) {
+                MaterialTheme(
+                    colorScheme = lightColorScheme(
+                        primary = androidx.compose.ui.graphics.Color(0xFF6C63FF),
+                        secondary = androidx.compose.ui.graphics.Color(0xFF03DAC6),
+                        tertiary = androidx.compose.ui.graphics.Color(0xFFFF4081)
+                    )
+                ) {
+                    ChatApp()
+                }
+            }
         }
     }
 
@@ -70,93 +88,102 @@ fun ChatApp() {
     val roomViewModel: RoomViewModel = viewModel(
         factory = RoomViewModelFactory(context.applicationContext)
     )
-    
+
     val authState by authViewModel.state.collectAsState()
 
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            primary = Color(0xFF6C63FF),
-            secondary = Color(0xFF03DAC6),
-            tertiary = Color(0xFFFF4081)
-        )
+    NavHost(
+        navController = navController,
+        startDestination = "splash"
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = "splash"
-        ) {
-            composable("splash") {
-                SplashScreen(
-                    isAuthenticated = authState.isAuthenticated,
-                    onNavigate = { route ->
-                        navController.navigate(route) {
-                            popUpTo("splash") { inclusive = true }
-                        }
+        composable("splash") {
+            SplashScreen(
+                isAuthenticated = authState.isAuthenticated,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo("splash") { inclusive = true }
                     }
-                )
-            }
-            composable("login") {
-                LoginScreen(
-                    onLoginSuccess = {
-                        navController.navigate("rooms") {
-                            popUpTo("login") { inclusive = true }
-                        }
-                    },
-                    onNavigateToRegister = {
-                        navController.navigate("register")
+                }
+            )
+        }
+        composable("login") {
+            LoginScreen(
+                onLoginSuccess = {
+                    navController.navigate("rooms") {
+                        popUpTo("login") { inclusive = true }
                     }
-                )
-            }
-            composable("register") {
-                RegisterScreen(
-                    onRegisterSuccess = {
-                        navController.navigate("rooms") {
-                            popUpTo("register") { inclusive = true }
-                        }
-                    },
-                    onNavigateToLogin = {
-                        navController.popBackStack()
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register")
+                }
+            )
+        }
+        composable("register") {
+            RegisterScreen(
+                onRegisterSuccess = {
+                    navController.navigate("rooms") {
+                        popUpTo("register") { inclusive = true }
                     }
-                )
-            }
-            composable("rooms") {
-                RoomListScreen(
-                    onRoomClick = { room ->
-                        val encodedName = Uri.encode(room.name)
-                        navController.navigate("chat/${room.id}/$encodedName")
-                    },
-                    onLogout = {
-                        authViewModel.logout()
-                        navController.navigate("login") {
-                            popUpTo("rooms") { inclusive = true }
-                        }
-                    },
-                    onCreateRoom = {
-                        navController.navigate("createRoom")
-                    },
-                    viewModel = roomViewModel
-                )
-            }
-            composable("createRoom") {
-                CreateRoomScreen(
-                    onBack = { navController.popBackStack() },
-                    onRoomCreated = {
-                        navController.popBackStack()
-                        roomViewModel.loadRooms()
-                    },
-                    viewModel = roomViewModel
-                )
-            }
-            composable("chat/{roomId}/{roomName}") { backStackEntry ->
-                val roomId = backStackEntry.arguments?.getString("roomId")?.toIntOrNull() ?: return@composable
-                val encodedRoomName = backStackEntry.arguments?.getString("roomName") ?: "Chat"
-                val roomName = Uri.decode(encodedRoomName)
-                ChatRoomScreen(
-                    roomId = roomId,
-                    roomName = roomName,
-                    onBack = { navController.popBackStack() },
-                    viewModel = roomViewModel
-                )
-            }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("rooms") {
+            RoomListScreen(
+                currentUser = authState.user,
+                onRoomClick = { room ->
+                    val encodedName = Uri.encode(room.name)
+                    navController.navigate("chat/${room.id}/$encodedName")
+                },
+                onLogout = {
+                    authViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo("rooms") { inclusive = true }
+                    }
+                },
+                onCreateRoom = {
+                    navController.navigate("createRoom")
+                },
+                onProfileClick = {
+                    navController.navigate("profile")
+                },
+                viewModel = roomViewModel
+            )
+        }
+        composable("createRoom") {
+            CreateRoomScreen(
+                onBack = { navController.popBackStack() },
+                onRoomCreated = {
+                    navController.popBackStack()
+                    roomViewModel.loadRooms()
+                },
+                viewModel = roomViewModel
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                user = authState.user,
+                onBack = { navController.popBackStack() },
+                onLogout = {
+                    authViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo("profile") { inclusive = true }
+                        popUpTo("rooms") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("chat/{roomId}/{roomName}") { backStackEntry ->
+            val roomId = backStackEntry.arguments?.getString("roomId")?.toIntOrNull() ?: return@composable
+            val encodedRoomName = backStackEntry.arguments?.getString("roomName") ?: "Chat"
+            val roomName = Uri.decode(encodedRoomName)
+            ChatRoomScreen(
+                roomId = roomId,
+                roomName = roomName,
+                onBack = { navController.popBackStack() },
+                viewModel = roomViewModel
+            )
         }
     }
 }
@@ -170,7 +197,7 @@ fun SplashScreen(
         kotlinx.coroutines.delay(500)
         onNavigate(if (isAuthenticated) "rooms" else "login")
     }
-    
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

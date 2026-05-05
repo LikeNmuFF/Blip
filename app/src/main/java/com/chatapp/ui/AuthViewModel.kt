@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 data class AuthState(
     val isLoading: Boolean = false,
@@ -66,7 +67,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                 } else {
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        error = "Login failed: ${response.code()}"
+                        error = getErrorMessage(response)
                     )
                 }
             } catch (e: Exception) {
@@ -88,12 +89,26 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                 } else {
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        error = "Registration failed: ${response.code()}"
+                        error = getErrorMessage(response)
                     )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = e.message)
             }
+        }
+    }
+
+    private fun getErrorMessage(response: retrofit2.Response<*>): String {
+        return try {
+            val errorBody = response.errorBody()?.string()
+            if (errorBody != null) {
+                val json = JSONObject(errorBody)
+                json.optString("error", "Request failed: ${response.code()}")
+            } else {
+                "Request failed: ${response.code()}"
+            }
+        } catch (e: Exception) {
+            "Request failed: ${response.code()}"
         }
     }
 

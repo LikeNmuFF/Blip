@@ -21,11 +21,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.chatapp.data.local.ThemeManager
 import com.chatapp.data.model.User
-import com.chatapp.ui.ChatState
 import com.chatapp.ui.RoomViewModel
 import kotlinx.coroutines.delay
 
@@ -43,13 +44,13 @@ fun CreateRoomScreen(
     var invitedUsers by remember { mutableStateOf<List<User>>(emptyList()) }
 
     val state by viewModel.state.collectAsState()
+    val themeManager = ThemeManager(LocalContext.current)
+    val isDark by themeManager.isDarkMode.collectAsState(initial = false)
 
-    // Reset state when entering screen
     LaunchedEffect(Unit) {
         viewModel.resetCreateRoomState()
     }
 
-    // Navigate back when room is created
     LaunchedEffect(state.roomCreated) {
         if (state.roomCreated) {
             delay(300)
@@ -57,7 +58,6 @@ fun CreateRoomScreen(
         }
     }
 
-    // Search users with debounce
     LaunchedEffect(searchQuery) {
         if (searchQuery.length >= 2) {
             delay(400)
@@ -67,52 +67,52 @@ fun CreateRoomScreen(
         }
     }
 
+    val surfaceColor = if (isDark) Color(0xFF111827) else Color.White
+    val onSurfaceColor = if (isDark) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+    val onSurfaceVariantColor = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
+    val outlineColor = if (isDark) Color(0xFF334155) else Color(0xFFE2E8F0)
+    val inputBg = if (isDark) Color(0xFF1E293B) else Color(0xFFF8FAFC)
+
     Scaffold(
+        containerColor = if (isDark) Color(0xFF0B1120) else Color(0xFFF8FAFC),
         topBar = {
-            Surface(shadowElevation = 2.dp) {
+            Surface(
+                color = surfaceColor,
+                shadowElevation = 1.dp
+            ) {
                 TopAppBar(
                     title = {
                         Text(
                             "Create Room",
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = onSurfaceColor
                         )
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = onSurfaceVariantColor)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = surfaceColor)
                 )
             }
         }
     ) { padding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .imePadding()
+            modifier = Modifier.fillMaxSize().padding(padding).imePadding()
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                // Header illustration
+                // Header
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(
-                                    Color(0xFF6C63FF),
-                                    Color(0xFF9B93FF)
-                                )
+                                colors = listOf(Color(0xFF3B82F6), Color(0xFF06D6A0))
                             )
                         )
                         .padding(24.dp),
@@ -120,342 +120,242 @@ fun CreateRoomScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Default.Forum,
+                            Icons.Default.Forum,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(44.dp)
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             "Start a Conversation",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                            fontSize = 18.sp
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "Create a room to chat with others",
+                            "Create a room and invite others",
                             color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 14.sp
+                            fontSize = 13.sp
                         )
                     }
                 }
 
-                // Error message
+                // Error
                 AnimatedVisibility(visible = state.createRoomError != null) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer
-                        ),
-                        shape = RoundedCornerShape(12.dp)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isDark) Color(0xFF450A0A) else Color(0xFFFEE2E2)
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.Error,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = state.createRoomError ?: "",
-                                color = MaterialTheme.colorScheme.onErrorContainer,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Icon(Icons.Default.Error, contentDescription = null, tint = if (isDark) Color(0xFFF87171) else Color(0xFFEF4444))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(state.createRoomError ?: "", fontSize = 13.sp, color = if (isDark) Color(0xFFFCA5A5) else Color(0xFFB91C1C))
                         }
                     }
                 }
 
                 // Room Name
                 Column {
-                    Text(
-                        "Room Name",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2D2D2D)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Room Name", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = onSurfaceColor)
+                    Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = roomName,
                         onValueChange = { roomName = it },
-                        placeholder = { Text("e.g. Project Team, Gaming Squad") },
+                        placeholder = { Text("e.g. Project Team, Gaming") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Tag,
-                                contentDescription = null,
-                                tint = Color(0xFF6C63FF)
-                            )
-                        }
+                            Icon(Icons.Default.Tag, contentDescription = null, tint = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB))
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB),
+                            unfocusedBorderColor = outlineColor,
+                            focusedContainerColor = inputBg,
+                            unfocusedContainerColor = inputBg
+                        )
                     )
                 }
 
-                // Room Description
+                // Description
                 Column {
-                    Text(
-                        "Description",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2D2D2D)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Description", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = onSurfaceColor)
+                    Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = roomDescription,
                         onValueChange = { roomDescription = it },
                         placeholder = { Text("What's this room about?") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 80.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 70.dp),
                         maxLines = 3,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         leadingIcon = {
-                            Icon(
-                                Icons.Default.Description,
-                                contentDescription = null,
-                                tint = Color(0xFF6C63FF)
-                            )
-                        }
+                            Icon(Icons.Default.Description, contentDescription = null, tint = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB))
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB),
+                            unfocusedBorderColor = outlineColor,
+                            focusedContainerColor = inputBg,
+                            unfocusedContainerColor = inputBg
+                        )
                     )
                 }
 
-                // Room Type Toggle
+                // Room Type
                 Column {
-                    Text(
-                        "Room Type",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF2D2D2D)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Room Type", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = onSurfaceColor)
+                    Spacer(modifier = Modifier.height(6.dp))
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .border(
-                                width = 1.dp,
-                                color = Color(0xFFE0E0E0),
-                                shape = RoundedCornerShape(14.dp)
-                            )
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).border(
+                            width = 1.dp,
+                            color = outlineColor,
+                            shape = RoundedCornerShape(14.dp)
+                        )
                     ) {
-                        // Public option
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable { isPrivate = false }
-                                .background(
-                                    if (!isPrivate) Color(0xFF6C63FF)
-                                    else Color.Transparent
-                                )
+                                .background(if (!isPrivate) (if (isDark) Color(0xFF1E3A5F) else Color(0xFF2563EB)) else Color.Transparent)
                                 .padding(vertical = 14.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Public,
-                                    contentDescription = null,
-                                    tint = if (!isPrivate) Color.White else Color.Gray,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Public",
-                                    color = if (!isPrivate) Color.White else Color.Gray,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Icon(Icons.Default.Public, contentDescription = null, tint = if (!isPrivate) Color.White else onSurfaceVariantColor, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Public", color = if (!isPrivate) Color.White else onSurfaceVariantColor, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                             }
                         }
-                        // Private option
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable { isPrivate = true }
-                                .background(
-                                    if (isPrivate) Color(0xFF6C63FF)
-                                    else Color.Transparent
-                                )
+                                .background(if (isPrivate) (if (isDark) Color(0xFF064E3B) else Color(0xFF06D6A0)) else Color.Transparent)
                                 .padding(vertical = 14.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = if (isPrivate) Color.White else Color.Gray,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    "Private",
-                                    color = if (isPrivate) Color.White else Color.Gray,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Icon(Icons.Default.Lock, contentDescription = null, tint = if (isPrivate) Color.White else onSurfaceVariantColor, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Private", color = if (isPrivate) Color.White else onSurfaceVariantColor, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        if (isPrivate) "Only invited members can join"
-                        else "Anyone on the app can join this room",
+                        if (isPrivate) "Only invited members can join" else "Anyone on the app can join",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
+                        color = onSurfaceVariantColor
                     )
                 }
 
-                // Invite Members (only for private rooms)
+                // Invite (private only)
                 AnimatedVisibility(
                     visible = isPrivate,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically()
                 ) {
                     Column {
-                        Text(
-                            "Invite Members",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF2D2D2D)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Invite Members", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = onSurfaceColor)
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                        // Invited users chips
                         if (invitedUsers.isNotEmpty()) {
                             FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 invitedUsers.forEach { user ->
                                     InputChip(
                                         selected = true,
-                                        onClick = {
-                                            invitedUsers = invitedUsers.filter { it.id != user.id }
-                                        },
-                                        label = { Text(user.username) },
+                                        onClick = { invitedUsers = invitedUsers.filter { it.id != user.id } },
+                                        label = { Text(user.username, fontSize = 12.sp) },
                                         leadingIcon = {
                                             Box(
-                                                modifier = Modifier
-                                                    .size(24.dp)
-                                                    .clip(CircleShape)
-                                                    .background(
-                                                        try {
-                                                            Color(android.graphics.Color.parseColor("#${user.avatarColor.replace("#", "")}"))
-                                                        } catch (e: Exception) {
-                                                            Color(0xFF6C63FF)
-                                                        }
-                                                    ),
+                                                modifier = Modifier.size(22.dp).clip(CircleShape).background(
+                                                    try {
+                                                        Color(android.graphics.Color.parseColor("#${user.avatarColor.replace("#", "")}"))
+                                                    } catch (e: Exception) {
+                                                        Color(0xFF3B82F6)
+                                                    }
+                                                ),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Text(
                                                     user.username.first().uppercaseChar().toString(),
                                                     color = Color.White,
-                                                    fontSize = 12.sp,
+                                                    fontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
                                             }
                                         },
-                                        trailingIcon = {
-                                            Icon(
-                                                Icons.Default.Close,
-                                                contentDescription = "Remove",
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                        },
-                                        shape = RoundedCornerShape(20.dp)
+                                        trailingIcon = { Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(14.dp)) },
+                                        shape = RoundedCornerShape(16.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
                         }
 
-                        // Search bar
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text("Search users to invite...") },
+                            placeholder = { Text("Search users...") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            shape = RoundedCornerShape(14.dp),
+                            shape = RoundedCornerShape(12.dp),
                             leadingIcon = {
-                                Icon(
-                                    Icons.Default.PersonSearch,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6C63FF)
-                                )
+                                Icon(Icons.Default.PersonSearch, contentDescription = null, tint = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB))
                             },
                             trailingIcon = {
                                 if (state.isSearching) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp
-                                    )
+                                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                                 }
-                            }
+                            },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB),
+                                unfocusedBorderColor = outlineColor,
+                                focusedContainerColor = inputBg,
+                                unfocusedContainerColor = inputBg
+                            )
                         )
 
-                        // Search results
                         if (state.searchResults.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Card(
-                                shape = RoundedCornerShape(14.dp),
-                                elevation = CardDefaults.cardElevation(2.dp)
-                            ) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(shape = RoundedCornerShape(14.dp), shadowElevation = 2.dp, color = surfaceColor) {
                                 Column {
                                     state.searchResults
                                         .filter { user -> invitedUsers.none { it.id == user.id } }
                                         .take(5)
-                                        .forEach { user ->
+                                        .forEachIndexed { index, user ->
                                             Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        invitedUsers = invitedUsers + user
-                                                        searchQuery = ""
-                                                        viewModel.searchUsers("")
-                                                    }
-                                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                                modifier = Modifier.fillMaxWidth().clickable {
+                                                    invitedUsers = invitedUsers + user
+                                                    searchQuery = ""
+                                                    viewModel.searchUsers("")
+                                                }.padding(horizontal = 14.dp, vertical = 10.dp),
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Box(
-                                                    modifier = Modifier
-                                                        .size(36.dp)
-                                                        .clip(CircleShape)
-                                                        .background(
-                                                            try {
-                                                                Color(android.graphics.Color.parseColor("#${user.avatarColor.replace("#", "")}"))
-                                                            } catch (e: Exception) {
-                                                                Color(0xFF6C63FF)
-                                                            }
-                                                        ),
+                                                    modifier = Modifier.size(32.dp).clip(CircleShape).background(
+                                                        try {
+                                                            Color(android.graphics.Color.parseColor("#${user.avatarColor.replace("#", "")}"))
+                                                        } catch (e: Exception) {
+                                                            Color(0xFF3B82F6)
+                                                        }
+                                                    ),
                                                     contentAlignment = Alignment.Center
                                                 ) {
-                                                    Text(
-                                                        user.username.first().uppercaseChar().toString(),
-                                                        color = Color.White,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
+                                                    Text(user.username.first().uppercaseChar().toString(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                                                 }
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Text(
-                                                    user.username,
-                                                    style = MaterialTheme.typography.bodyLarge,
-                                                    fontWeight = FontWeight.Medium
-                                                )
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Text(user.username, fontWeight = FontWeight.Medium, color = onSurfaceColor)
                                                 Spacer(modifier = Modifier.weight(1f))
-                                                Icon(
-                                                    Icons.Default.PersonAdd,
-                                                    contentDescription = "Add",
-                                                    tint = Color(0xFF6C63FF),
-                                                    modifier = Modifier.size(20.dp)
-                                                )
+                                                Icon(Icons.Default.PersonAdd, contentDescription = "Add", tint = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB), modifier = Modifier.size(18.dp))
                                             }
-                                            if (user != state.searchResults.last()) {
-                                                HorizontalDivider(
-                                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                                    color = Color(0xFFF0F0F0)
-                                                )
+                                            if (index < state.searchResults.count { invitedUsers.none { u -> u.id == it.id } } - 1) {
+                                                HorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp), color = outlineColor)
                                             }
                                         }
                                 }
@@ -464,67 +364,41 @@ fun CreateRoomScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
                 // Create button
                 Button(
                     onClick = {
                         viewModel.createRoom(
-                            name = roomName.trim(),
+                            name = roomName.trim().lowercase().replace(" ", "-"),
                             description = roomDescription.trim(),
                             isPrivate = isPrivate,
                             invites = invitedUsers.map { it.username }
                         )
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
                     enabled = roomName.isNotBlank() && !state.isCreatingRoom,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF6C63FF)
+                        containerColor = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB)
                     )
                 ) {
                     if (state.isCreatingRoom) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.5.dp,
-                            color = Color.White
-                        )
+                        CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp, color = Color.White)
                     } else {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Create Room",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("Create Room", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                     }
                 }
 
-                // Success indicator
                 AnimatedVisibility(visible = state.roomCreated) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color(0xFFE8F5E9)
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
+                    Surface(shape = RoundedCornerShape(12.dp), color = if (isDark) Color(0xFF064E3B) else Color(0xFFD1FAE5)) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = Color(0xFF4CAF50)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                "Room created successfully!",
-                                color = Color(0xFF2E7D32),
-                                fontWeight = FontWeight.Medium
-                            )
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF06D6A0))
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text("Room created!", color = Color(0xFF06D6A0), fontWeight = FontWeight.Medium)
                         }
                     }
                 }
