@@ -19,7 +19,12 @@ data class ChatState(
     val rooms: List<Room> = emptyList(),
     val messages: List<Message> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val searchResults: List<User> = emptyList(),
+    val isSearching: Boolean = false,
+    val isCreatingRoom: Boolean = false,
+    val roomCreated: Boolean = false,
+    val createRoomError: String? = null
 )
 
 class RoomViewModel(private val context: Context) : ViewModel() {
@@ -121,5 +126,71 @@ class RoomViewModel(private val context: Context) : ViewModel() {
 
     fun cleanupSocketListener() {
         SocketService.instance.offMessage()
+    }
+
+    fun searchUsers(query: String) {
+        if (query.isBlank()) {
+            _state.value = _state.value.copy(searchResults = emptyList(), isSearching = false)
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isSearching = true)
+            try {
+                val response = RetrofitClient.apiService.searchUsers(query)
+                if (response.isSuccessful) {
+                    _state.value = _state.value.copy(
+                        searchResults = response.body() ?: emptyList(),
+                        isSearching = false
+                    )
+                } else {
+                    _state.value = _state.value.copy(searchResults = emptyList(), isSearching = false)
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(searchResults = emptyList(), isSearching = false)
+            }
+        }
+    }
+
+    fun createRoom(name: String, description: String, isPrivate: Boolean, invites: List<String>) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isCreatingRoom = true, createRoomError = null, roomCreated = false)
+            try {
+                val request = CreateRoomRequest(
+                    name = name,
+                    description = description,
+                    isPrivate = isPrivate,
+                    invites = invites
+                )
+                val response = RetrofitClient.apiService.createRoom(request)
+                if (response.isSuccessful && response.body() != null) {
+                    val newRoom = response.body()!!
+                    val updatedRooms = _state.value.rooms.toMutableList()
+                    updatedRooms.add(0, newRoom)
+                    _state.value = _state.value.copy(
+                        rooms = updatedRooms,
+                        isCreatingRoom = false,
+                        roomCreated = true
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        isCreatingRoom = false,
+                        createRoomError = "Failed to create room (${response.code()})"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isCreatingRoom = false,
+                    createRoomError = e.message ?: "Network error"
+                )
+            }
+        }
+    }
+
+    fun resetCreateRoomState() {
+        _state.value = _state.value.copy(
+            roomCreated = false,
+            createRoomError = null,
+            searchResults = emptyList()
+        )
     }
 }

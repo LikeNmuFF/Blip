@@ -27,6 +27,7 @@ import com.chatapp.ui.RoomViewModelFactory
 import com.chatapp.ui.chat.ChatRoomScreen
 import com.chatapp.ui.login.LoginScreen
 import com.chatapp.ui.register.RegisterScreen
+import com.chatapp.ui.rooms.CreateRoomScreen
 import com.chatapp.ui.rooms.RoomListScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -128,7 +129,21 @@ fun ChatApp() {
                         navController.navigate("login") {
                             popUpTo("rooms") { inclusive = true }
                         }
-                    }
+                    },
+                    onCreateRoom = {
+                        navController.navigate("createRoom")
+                    },
+                    viewModel = roomViewModel
+                )
+            }
+            composable("createRoom") {
+                CreateRoomScreen(
+                    onBack = { navController.popBackStack() },
+                    onRoomCreated = {
+                        navController.popBackStack()
+                        roomViewModel.loadRooms()
+                    },
+                    viewModel = roomViewModel
                 )
             }
             composable("chat/{roomId}/{roomName}") { backStackEntry ->

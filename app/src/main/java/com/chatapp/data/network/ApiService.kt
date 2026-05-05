@@ -30,6 +30,9 @@ interface ApiService {
         @Body request: MessageRequest
     ): Response<Message>
 
+    @POST("/api/rooms")
+    suspend fun createRoom(@Body request: CreateRoomRequest): Response<Room>
+
     @GET("/api/users/search")
     suspend fun searchUsers(@Query("q") query: String): Response<List<User>>
 }
