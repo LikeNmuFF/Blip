@@ -4,6 +4,12 @@ import com.chatapp.data.model.*
 import retrofit2.Response
 import retrofit2.http.*
 
+data class CreateRoomResponse(
+    @com.google.gson.annotations.SerializedName("room") val room: Room,
+    @com.google.gson.annotations.SerializedName("invited") val invited: List<String>,
+    @com.google.gson.annotations.SerializedName("not_found") val notFound: List<String>
+)
+
 interface ApiService {
     @POST("/api/auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
@@ -31,7 +37,7 @@ interface ApiService {
     ): Response<Message>
 
     @POST("/api/rooms")
-    suspend fun createRoom(@Body request: CreateRoomRequest): Response<Room>
+    suspend fun createRoom(@Body request: CreateRoomRequest): Response<CreateRoomResponse>
 
     @GET("/api/users/search")
     suspend fun searchUsers(@Query("q") query: String): Response<List<User>>

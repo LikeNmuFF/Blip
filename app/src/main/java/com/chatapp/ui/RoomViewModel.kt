@@ -163,7 +163,7 @@ class RoomViewModel(private val context: Context) : ViewModel() {
                 )
                 val response = RetrofitClient.apiService.createRoom(request)
                 if (response.isSuccessful && response.body() != null) {
-                    val newRoom = response.body()!!
+                    val newRoom = response.body()!!.room
                     val updatedRooms = _state.value.rooms.toMutableList()
                     updatedRooms.add(0, newRoom)
                     _state.value = _state.value.copy(
@@ -172,9 +172,10 @@ class RoomViewModel(private val context: Context) : ViewModel() {
                         roomCreated = true
                     )
                 } else {
+                    val errorBody = response.errorBody()?.string()
                     _state.value = _state.value.copy(
                         isCreatingRoom = false,
-                        createRoomError = "Failed to create room (${response.code()})"
+                        createRoomError = "Failed: ${response.code()} - $errorBody"
                     )
                 }
             } catch (e: Exception) {

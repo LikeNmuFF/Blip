@@ -346,10 +346,14 @@ fun MessageInputBar(
 
 fun formatTime(timestamp: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        val inputFormat = if (timestamp.contains("T")) {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+        } else {
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        }
         inputFormat.timeZone = TimeZone.getTimeZone("UTC")
         val date = inputFormat.parse(timestamp)
-        val outputFormat = SimpleDateFormat("HH:mm", Locale.US)
+        val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
         outputFormat.format(date!!)
     } catch (e: Exception) {
         ""

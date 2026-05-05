@@ -1,10 +1,12 @@
 package com.chatapp.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class User(
-    val id: Int,
-    val username: String,
-    val avatarColor: String,
-    val createdAt: String
+    val id: Int = 0,
+    @SerializedName("username") val username: String = "",
+    @SerializedName("avatar_color") val avatarColor: String = "",
+    @SerializedName("created_at") val createdAt: String = ""
 ) {
     companion object {
         fun fromMap(map: Map<*, *>): User {
@@ -19,14 +21,14 @@ data class User(
 }
 
 data class Room(
-    val id: Int,
-    val name: String,
-    val description: String,
-    val isGlobal: Boolean,
-    val isPrivate: Boolean,
-    val ownerId: Int?,
-    val ownerName: String?,
-    val createdAt: String
+    val id: Int = 0,
+    @SerializedName("name") val name: String = "",
+    @SerializedName("description") val description: String = "",
+    @SerializedName("is_global") val isGlobal: Boolean = false,
+    @SerializedName("is_private") val isPrivate: Boolean = false,
+    @SerializedName("owner_id") val ownerId: Int? = null,
+    @SerializedName("owner_name") val ownerName: String? = null,
+    @SerializedName("created_at") val createdAt: String = ""
 ) {
     companion object {
         fun fromMap(map: Map<*, *>): Room {
@@ -45,13 +47,13 @@ data class Room(
 }
 
 data class Message(
-    val id: Int,
-    val roomId: Int,
-    val userId: Int,
-    val username: String,
-    val avatarColor: String,
-    val content: String,
-    val createdAt: String
+    val id: Int = 0,
+    @SerializedName("room_id") val roomId: Int = 0,
+    @SerializedName("user_id") val userId: Int = 0,
+    @SerializedName("username") val username: String = "",
+    @SerializedName("avatar_color") val avatarColor: String = "",
+    @SerializedName("content") val content: String = "",
+    @SerializedName("created_at") val createdAt: String = ""
 ) {
     companion object {
         fun fromMap(map: Map<*, *>): Message {
@@ -79,8 +81,8 @@ data class RegisterRequest(
 )
 
 data class AuthResponse(
-    val token: String,
-    val user: User
+    @SerializedName("token") val token: String = "",
+    @SerializedName("user") val user: User? = null
 )
 
 data class MessageRequest(
@@ -89,7 +91,7 @@ data class MessageRequest(
 
 data class CreateRoomRequest(
     val name: String,
-    val description: String,
-    val isPrivate: Boolean,
-    val invites: List<String>
+    val description: String = "",
+    @SerializedName("is_private") val isPrivate: Boolean = false,
+    val invites: List<String> = emptyList()
 )
