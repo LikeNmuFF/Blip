@@ -1,6 +1,6 @@
 package com.chatapp.ui.chat
 
-import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,18 +17,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.LocalTextStyle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chatapp.data.local.TokenStorage
 import com.chatapp.data.model.Message
-import com.chatapp.data.network.RetrofitClient
 import com.chatapp.data.network.SocketService
 import com.chatapp.ui.RoomViewModel
 import com.chatapp.ui.RoomViewModelFactory
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,62 +40,85 @@ fun ChatRoomScreen(
     roomName: String,
     onBack: () -> Unit,
     viewModel: RoomViewModel = viewModel(
-        factory = RoomViewModelFactory(LocalContext.current)
+        factory = RoomViewModelFactory(LocalContext.current.applicationContext)
     )
 ) {
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    val context = LocalContext.current
+    val context = LocalContext.current.applicationContext
     val state by viewModel.state.collectAsState()
+    
+    // Scroll to bottom when new messages arrive
+    LaunchedEffect(state.messages.size) {
+        if (state.messages.isNotEmpty()) {
+            listState.animateScrollToItem(state.messages.size - 1)
+        }
+    }
     
     LaunchedEffect(Unit) {
         viewModel.loadMessages(roomId)
         
-        // Connect WebSocket
-        val token = TokenStorage(context).token.first()
-        if (token != null) {
-            SocketService.instance.connect(token)
-            SocketService.instance.joinRoom(roomId, token)
-            viewModel.setupSocketListener()
+        // Connect WebSocket safely
+        try {
+            val token = TokenStorage(context).token.first()
+            if (token != null) {
+                SocketService.instance.connect(token)
+                SocketService.instance.joinRoom(roomId, token)
+                viewModel.setupSocketListener()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
     
     DisposableEffect(Unit) {
         onDispose {
-            SocketService.instance.leaveRoom(roomId)
-            viewModel.cleanupSocketListener()
+            try {
+                SocketService.instance.leaveRoom(roomId)
+                viewModel.cleanupSocketListener()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
     
     Scaffold(
         modifier = Modifier.imePadding(),
-        containerColor = Color(0xFFF5F5F5), // Light modern background
+        containerColor = Color(0xFFF5F5F5),
         topBar = {
-            Surface(shadowElevation = 2.dp) {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(roomName, fontWeight = FontWeight.Bold)
-                            Text(
-                                text = if (SocketService.instance.isConnected()) "Connected" else "Connecting...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (SocketService.instance.isConnected()) 
-                                    Color(0xFF00BFA5) 
-                                else 
-                                    Color.Gray
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            roomName,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = if (SocketService.instance.isConnected()) "Connected" else "Connecting...",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.sp,
+                            color = if (SocketService.instance.isConnected()) 
+                                Color(0xFF00BFA5) 
+                            else 
+                                Color.Gray
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
-            }
+            )
         }
     ) { padding ->
         Column(
@@ -105,14 +129,18 @@ fun ChatRoomScreen(
             // Messages list
             if (state.isLoading && state.messages.isEmpty()) {
                 Box(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(32.dp),
+                        strokeWidth = 3.dp
+                    )
                 }
             } else if (state.messages.isEmpty()) {
                 Box(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -120,17 +148,17 @@ fun ChatRoomScreen(
                             imageVector = Icons.AutoMirrored.Filled.Chat,
                             contentDescription = null,
                             tint = Color.LightGray,
-                            modifier = Modifier.size(64.dp)
+                            modifier = Modifier.size(48.dp)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "No messages yet",
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
                         Text(
-                            text = "Be the first to send a message!",
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = "Be the first to say hello!",
+                            style = MaterialTheme.typography.bodySmall,
                             color = Color.LightGray
                         )
                     }
@@ -140,8 +168,8 @@ fun ChatRoomScreen(
                     modifier = Modifier.weight(1f),
                     state = listState,
                     reverseLayout = false,
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     items(state.messages, key = { it.id }) { message ->
                         MessageBubble(message = message)
@@ -167,83 +195,84 @@ fun ChatRoomScreen(
 @Composable
 fun MessageBubble(message: Message) {
     // Get current user ID from token
-    val context = LocalContext.current
-    val currentUserId = remember {
-        // In a real app, you'd store this in the ViewModel
-        // For now, we'll just use a placeholder
-        -1
-    }
+    val currentUserId = remember { -1 }
     val isMe = message.userId == currentUserId
     
+    // Use screen width fraction instead of fixed dp
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val maxBubbleWidth = screenWidth * 0.7f // 70% of screen width
+    
     val bubbleShape = if (isMe) {
-        RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
+        RoundedCornerShape(16.dp, 16.dp, 4.dp, 16.dp)
     } else {
-        RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
+        RoundedCornerShape(16.dp, 16.dp, 16.dp, 4.dp)
     }
     
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
         horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Bottom
     ) {
         if (!isMe) {
+            // Avatar
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(28.dp)
                     .clip(CircleShape)
+                    .background(
+                        try {
+                            Color(android.graphics.Color.parseColor("#${message.avatarColor.replace("#", "")}"))
+                        } catch (e: Exception) {
+                            Color(0xFF6C63FF)
+                        }
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = try {
-                        Color(android.graphics.Color.parseColor("#${message.avatarColor.replace("#", "")}"))
-                    } catch (e: Exception) {
-                        Color(0xFF6C63FF)
-                    }
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = message.username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
+                Text(
+                    text = message.username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                )
             }
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
         }
         
-        Column(horizontalAlignment = if (isMe) Alignment.End else Alignment.Start) {
+        Column(
+            horizontalAlignment = if (isMe) Alignment.End else Alignment.Start,
+            modifier = Modifier.widthIn(max = maxBubbleWidth)
+        ) {
             if (!isMe) {
                 Text(
                     text = message.username,
-                    style = MaterialTheme.typography.labelMedium,
+                    fontSize = 11.sp,
                     color = Color.Gray,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
                 )
             }
             
             Surface(
                 color = if (isMe) MaterialTheme.colorScheme.primary else Color.White,
                 shape = bubbleShape,
-                shadowElevation = 1.dp
+                shadowElevation = 0.5.dp
             ) {
                 Column(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                        .widthIn(max = 280.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = message.content,
-                        style = MaterialTheme.typography.bodyLarge,
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp,
                         color = if (isMe) Color.White else Color(0xFF2D2D2D)
                     )
                     
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     
                     Text(
                         text = formatTime(message.createdAt),
-                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
                         color = if (isMe) Color.White.copy(alpha = 0.7f) else Color.Gray,
                         modifier = Modifier.align(Alignment.End)
                     )
@@ -260,44 +289,55 @@ fun MessageInputBar(
     onSend: () -> Unit
 ) {
     Surface(
-        tonalElevation = 8.dp,
+        tonalElevation = 4.dp,
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.navigationBarsPadding()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.Bottom
         ) {
             OutlinedTextField(
                 value = text,
                 onValueChange = onTextChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Message...", color = Color.Gray) },
-                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 44.dp, max = 120.dp),
+                placeholder = {
+                    Text(
+                        "Message...",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                },
+                shape = RoundedCornerShape(22.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    unfocusedBorderColor = Color.LightGray,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                    unfocusedBorderColor = Color(0xFFE0E0E0),
                     focusedContainerColor = Color(0xFFFAFAFA),
                     unfocusedContainerColor = Color(0xFFFAFAFA)
                 ),
+                textStyle = LocalTextStyle.current.copy(fontSize = 14.sp),
                 maxLines = 4
             )
             
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             
             FloatingActionButton(
                 onClick = onSend,
-                modifier = Modifier.size(50.dp).padding(bottom = 2.dp),
+                modifier = Modifier.size(44.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
-                elevation = FloatingActionButtonDefaults.elevation(0.dp)
+                shape = CircleShape
             ) {
                 Icon(
                     Icons.Default.Send,
                     contentDescription = "Send",
                     tint = Color.White,
-                    modifier = Modifier.padding(start = 4.dp) // Optically center the send icon
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(start = 2.dp)
                 )
             }
         }
