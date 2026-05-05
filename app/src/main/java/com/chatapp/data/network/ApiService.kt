@@ -41,4 +41,16 @@ interface ApiService {
 
     @GET("/api/users/search")
     suspend fun searchUsers(@Query("q") query: String): Response<List<User>>
+
+    @PUT("/api/auth/profile")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<User>
+
+    @PUT("/api/auth/password")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Map<String, String>>
+
+    @POST("/api/rooms/{roomId}/members")
+    suspend fun addRoomMember(
+        @Path("roomId") roomId: Int,
+        @Body request: AddMemberRequest
+    ): Response<Map<String, Any>>
 }

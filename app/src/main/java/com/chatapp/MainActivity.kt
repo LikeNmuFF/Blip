@@ -121,7 +121,7 @@ fun ChatApp() {
                 currentUser = authState.user,
                 onRoomClick = { room ->
                     val encodedName = Uri.encode(room.name)
-                    navController.navigate("chat/${room.id}/$encodedName")
+                    navController.navigate("chat/${room.id}/$encodedName/${room.isPrivate}")
                 },
                 onLogout = {
                     authViewModel.logout()
@@ -158,16 +158,19 @@ fun ChatApp() {
                         popUpTo("profile") { inclusive = true }
                         popUpTo("rooms") { inclusive = true }
                     }
-                }
+                },
+                viewModel = roomViewModel
             )
         }
-        composable("chat/{roomId}/{roomName}") { backStackEntry ->
+        composable("chat/{roomId}/{roomName}/{isPrivate}") { backStackEntry ->
             val roomId = backStackEntry.arguments?.getString("roomId")?.toIntOrNull() ?: return@composable
             val encodedRoomName = backStackEntry.arguments?.getString("roomName") ?: "Chat"
             val roomName = Uri.decode(encodedRoomName)
+            val isPrivate = backStackEntry.arguments?.getString("isPrivate")?.toBooleanStrictOrNull() ?: false
             ChatRoomScreen(
                 roomId = roomId,
                 roomName = roomName,
+                isPrivate = isPrivate,
                 onBack = { navController.popBackStack() },
                 viewModel = roomViewModel
             )

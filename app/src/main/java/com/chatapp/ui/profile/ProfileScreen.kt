@@ -1,6 +1,7 @@
 package com.chatapp.ui.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -19,17 +20,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.chatapp.data.model.User
+import com.chatapp.ui.RoomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     user: User?,
     onBack: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onUserUpdated: (User) -> Unit = {},
+    viewModel: RoomViewModel? = null
 ) {
     val avatarColor = try {
         Color(android.graphics.Color.parseColor("#${(user?.avatarColor ?: "6C63FF").replace("#", "")}"))
@@ -37,7 +42,20 @@ fun ProfileScreen(
         Color(0xFF6C63FF)
     }
 
+    var showEditNameDialog by remember { mutableStateOf(false) }
+    var showChangePasswordDialog by remember { mutableStateOf(false) }
+    var snackbarMessage by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            snackbarMessage = null
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Profile", fontWeight = FontWeight.Bold) },
@@ -139,7 +157,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Info Section
+            // Account Info Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -181,6 +199,45 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Edit Profile Section
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Text(
+                    "Edit Profile",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+                )
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(1.dp)
+                ) {
+                    Column {
+                        SettingsItem(
+                            icon = Icons.Default.Edit,
+                            label = "Change Username",
+                            iconColor = Color(0xFF6C63FF),
+                            onClick = { showEditNameDialog = true }
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
+                        SettingsItem(
+                            icon = Icons.Default.Lock,
+                            label = "Change Password",
+                            iconColor = Color(0xFFFF6B6B),
+                            onClick = { showChangePasswordDialog = true }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Settings Section
             Column(
                 modifier = Modifier
@@ -208,18 +265,6 @@ fun ProfileScreen(
                         )
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
                         SettingsItem(
-                            icon = Icons.Default.Palette,
-                            label = "Appearance",
-                            iconColor = Color(0xFFFF6B6B)
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
-                        SettingsItem(
-                            icon = Icons.Default.Shield,
-                            label = "Privacy & Security",
-                            iconColor = Color(0xFF00BFA5)
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = Color(0xFFF0F0F0))
-                        SettingsItem(
                             icon = Icons.Default.Info,
                             label = "About Blip",
                             iconColor = Color(0xFFFF9800)
@@ -238,9 +283,7 @@ fun ProfileScreen(
                     .padding(horizontal = 20.dp)
                     .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFEBEE)
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEBEE))
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.Logout,
@@ -249,26 +292,170 @@ fun ProfileScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    "Log Out",
-                    color = Color(0xFFE53935),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
+                Text("Log Out", color = Color(0xFFE53935), fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
-            Text(
-                "Blip v1.0.0",
-                color = Color.LightGray,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center
-            )
-
+            Text("Blip v1.0.0", color = Color.LightGray, fontSize = 12.sp, textAlign = TextAlign.Center)
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+
+    // Edit Username Dialog
+    if (showEditNameDialog) {
+        EditNameDialog(
+            currentName = user?.username ?: "",
+            onDismiss = { showEditNameDialog = false },
+            onSave = { newName ->
+                viewModel?.updateProfile(
+                    newUsername = newName,
+                    onSuccess = { updatedUser ->
+                        showEditNameDialog = false
+                        snackbarMessage = "Username updated!"
+                        onUserUpdated(updatedUser)
+                    },
+                    onError = { error ->
+                        snackbarMessage = "Error: $error"
+                    }
+                )
+            }
+        )
+    }
+
+    // Change Password Dialog
+    if (showChangePasswordDialog) {
+        ChangePasswordDialog(
+            onDismiss = { showChangePasswordDialog = false },
+            onSave = { currentPass, newPass ->
+                viewModel?.changePassword(
+                    currentPassword = currentPass,
+                    newPassword = newPass,
+                    onSuccess = {
+                        showChangePasswordDialog = false
+                        snackbarMessage = "Password changed!"
+                    },
+                    onError = { error ->
+                        snackbarMessage = "Error: $error"
+                    }
+                )
+            }
+        )
+    }
+}
+
+@Composable
+private fun EditNameDialog(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var name by remember { mutableStateOf(currentName) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text("Change Username", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("New username") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = { if (name.isNotBlank()) onSave(name) },
+                enabled = name.isNotBlank() && name != currentName,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C63FF))
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ChangePasswordDialog(
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    val passwordsMatch = newPassword == confirmPassword && newPassword.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text("Change Password", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = currentPassword,
+                    onValueChange = { currentPassword = it },
+                    label = { Text("Current password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("New password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirm new password") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    isError = confirmPassword.isNotBlank() && !passwordsMatch,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (confirmPassword.isNotBlank() && !passwordsMatch) {
+                    Text(
+                        "Passwords don't match",
+                        color = Color(0xFFE53935),
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(currentPassword, newPassword) },
+                enabled = currentPassword.isNotBlank() && passwordsMatch,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6C63FF))
+            ) {
+                Text("Change")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -296,26 +483,12 @@ private fun ProfileInfoCard(
                     .background(iconColor.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    icon,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(22.dp)
-                )
+                Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(22.dp))
             }
             Spacer(modifier = Modifier.width(14.dp))
             Column {
-                Text(
-                    label,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                Text(
-                    value,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Text(label, fontSize = 12.sp, color = Color.Gray)
+                Text(value, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }
@@ -325,11 +498,13 @@ private fun ProfileInfoCard(
 private fun SettingsItem(
     icon: ImageVector,
     label: String,
-    iconColor: Color
+    iconColor: Color,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -340,26 +515,11 @@ private fun SettingsItem(
                 .background(iconColor.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            label,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = Color(0xFFD0D0D0),
-            modifier = Modifier.size(20.dp)
-        )
+        Text(label, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color(0xFFD0D0D0), modifier = Modifier.size(20.dp))
     }
 }
 

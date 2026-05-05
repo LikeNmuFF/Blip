@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,12 +42,15 @@ import java.util.*
 fun ChatRoomScreen(
     roomId: Int,
     roomName: String,
+    isPrivate: Boolean = false,
     onBack: () -> Unit,
     viewModel: RoomViewModel = viewModel(
         factory = RoomViewModelFactory(LocalContext.current.applicationContext)
     )
 ) {
     var messageText by remember { mutableStateOf("") }
+    var showAddMemberDialog by remember { mutableStateOf(false) }
+    var addMemberMessage by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val context = LocalContext.current.applicationContext
     val state by viewModel.state.collectAsState()
@@ -156,6 +160,17 @@ fun ChatRoomScreen(
                                 contentDescription = "Back",
                                 tint = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
                             )
+                        }
+                    },
+                    actions = {
+                        if (isPrivate) {
+                            IconButton(onClick = { showAddMemberDialog = true }) {
+                                Icon(
+                                    Icons.Default.PersonAdd,
+                                    contentDescription = "Add Member",
+                                    tint = if (isDark) Color(0xFF60A5FA) else Color(0xFF3B82F6)
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -274,6 +289,35 @@ fun ChatRoomScreen(
             }
         }
     }
+
+    // Add Member Dialog
+    if (showAddMemberDialog) {
+        AddMemberDialog(
+            onDismiss = { showAddMemberDialog = false },
+            onAddMember = { username ->
+                viewModel.addRoomMember(
+                    roomId = roomId,
+                    username = username,
+                    onSuccess = {
+                        showAddMemberDialog = false
+                        addMemberMessage = "$username added!"
+                    },
+                    onError = { error ->
+                        addMemberMessage = "Error: $error"
+                    }
+                )
+            },
+            viewModel = viewModel
+        )
+    }
+
+    // Snackbar for add member feedback
+    addMemberMessage?.let { msg ->
+        LaunchedEffect(msg) {
+            kotlinx.coroutines.delay(2000)
+            addMemberMessage = null
+        }
+    }
 }
 
 @Composable
@@ -382,4 +426,120 @@ fun formatTime(timestamp: String): String {
     } catch (e: Exception) {
         ""
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddMemberDialog(
+    onDismiss: () -> Unit,
+    onAddMember: (String) -> Unit,
+    viewModel: RoomViewModel
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(searchQuery) {
+        if (searchQuery.length >= 2) {
+            kotlinx.coroutines.delay(300)
+            viewModel.searchUsers(searchQuery)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        title = {
+            Text("Add Member", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search username") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            tint = Color(0xFF6C63FF)
+                        )
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (state.isSearching) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    }
+                } else if (state.searchResults.isNotEmpty()) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        state.searchResults.take(5).forEach { user ->
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF6C63FF).copy(alpha = 0.08f),
+                                onClick = { onAddMember(user.username) }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val userColor = try {
+                                        Color(android.graphics.Color.parseColor("#${user.avatarColor.replace("#", "")}"))
+                                    } catch (e: Exception) {
+                                        Color(0xFF6C63FF)
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(userColor),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            user.username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        user.username,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else if (searchQuery.length >= 2) {
+                    Text(
+                        "No users found",
+                        color = Color.Gray,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -95,3 +95,16 @@ data class CreateRoomRequest(
     @SerializedName("is_private") val isPrivate: Boolean = false,
     val invites: List<String> = emptyList()
 )
+
+data class UpdateProfileRequest(
+    val username: String
+)
+
+data class ChangePasswordRequest(
+    @SerializedName("current_password") val currentPassword: String,
+    @SerializedName("new_password") val newPassword: String
+)
+
+data class AddMemberRequest(
+    val username: String
+)

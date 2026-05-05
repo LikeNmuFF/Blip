@@ -194,4 +194,58 @@ class RoomViewModel(private val context: Context) : ViewModel() {
             searchResults = emptyList()
         )
     }
+
+    fun updateProfile(newUsername: String, onSuccess: (User) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.updateProfile(
+                    UpdateProfileRequest(newUsername)
+                )
+                if (response.isSuccessful && response.body() != null) {
+                    onSuccess(response.body()!!)
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    onError(errorBody ?: "Failed to update profile")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Network error")
+            }
+        }
+    }
+
+    fun changePassword(currentPassword: String, newPassword: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.changePassword(
+                    ChangePasswordRequest(currentPassword, newPassword)
+                )
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    onError(errorBody ?: "Failed to change password")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Network error")
+            }
+        }
+    }
+
+    fun addRoomMember(roomId: Int, username: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.addRoomMember(
+                    roomId, AddMemberRequest(username)
+                )
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    onError(errorBody ?: "Failed to add member")
+                }
+            } catch (e: Exception) {
+                onError(e.message ?: "Network error")
+            }
+        }
+    }
 }
