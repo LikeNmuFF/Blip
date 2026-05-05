@@ -1,5 +1,6 @@
 package com.chatapp
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -119,7 +120,8 @@ fun ChatApp() {
             composable("rooms") {
                 RoomListScreen(
                     onRoomClick = { room ->
-                        navController.navigate("chat/${room.id}/${room.name}")
+                        val encodedName = Uri.encode(room.name)
+                        navController.navigate("chat/${room.id}/$encodedName")
                     },
                     onLogout = {
                         authViewModel.logout()
@@ -131,7 +133,8 @@ fun ChatApp() {
             }
             composable("chat/{roomId}/{roomName}") { backStackEntry ->
                 val roomId = backStackEntry.arguments?.getString("roomId")?.toIntOrNull() ?: return@composable
-                val roomName = backStackEntry.arguments?.getString("roomName") ?: "Chat"
+                val encodedRoomName = backStackEntry.arguments?.getString("roomName") ?: "Chat"
+                val roomName = Uri.decode(encodedRoomName)
                 ChatRoomScreen(
                     roomId = roomId,
                     roomName = roomName,

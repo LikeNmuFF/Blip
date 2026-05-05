@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
@@ -66,27 +67,34 @@ fun ChatRoomScreen(
     }
     
     Scaffold(
+        modifier = Modifier.imePadding(),
+        containerColor = Color(0xFFF5F5F5), // Light modern background
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(roomName)
-                        Text(
-                            text = if (SocketService.instance.isConnected()) "Connected" else "Connecting...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (SocketService.instance.isConnected()) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
-                                Color.Gray
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
+            Surface(shadowElevation = 2.dp) {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(roomName, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = if (SocketService.instance.isConnected()) "Connected" else "Connecting...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (SocketService.instance.isConnected()) 
+                                    Color(0xFF00BFA5) 
+                                else 
+                                    Color.Gray
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+            }
         }
     ) { padding ->
         Column(
@@ -167,14 +175,21 @@ fun MessageBubble(message: Message) {
     }
     val isMe = message.userId == currentUserId
     
+    val bubbleShape = if (isMe) {
+        RoundedCornerShape(20.dp, 20.dp, 4.dp, 20.dp)
+    } else {
+        RoundedCornerShape(20.dp, 20.dp, 20.dp, 4.dp)
+    }
+    
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Bottom
     ) {
         if (!isMe) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
             ) {
                 Surface(
@@ -189,7 +204,8 @@ fun MessageBubble(message: Message) {
                         Text(
                             text = message.username.firstOrNull()?.uppercaseChar()?.toString() ?: "?",
                             color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -197,57 +213,42 @@ fun MessageBubble(message: Message) {
             Spacer(modifier = Modifier.width(8.dp))
         }
         
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = if (isMe) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    Color.White
-            ),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .widthIn(max = 280.dp)
-            ) {
-                if (!isMe) {
-                    Text(
-                        text = message.username,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isMe) 
-                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                        else 
-                            Color.Gray,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                }
-                
+        Column(horizontalAlignment = if (isMe) Alignment.End else Alignment.Start) {
+            if (!isMe) {
                 Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isMe) 
-                        MaterialTheme.colorScheme.onPrimary 
-                    else 
-                        Color.Black
-                )
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                Text(
-                    text = formatTime(message.createdAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isMe) 
-                        MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
-                    else 
-                        Color.LightGray
+                    text = message.username,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                 )
             }
-        }
-        
-        if (isMe) {
-            Spacer(modifier = Modifier.width(8.dp))
+            
+            Surface(
+                color = if (isMe) MaterialTheme.colorScheme.primary else Color.White,
+                shape = bubbleShape,
+                shadowElevation = 1.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .widthIn(max = 280.dp)
+                ) {
+                    Text(
+                        text = message.content,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (isMe) Color.White else Color(0xFF2D2D2D)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    Text(
+                        text = formatTime(message.createdAt),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isMe) Color.White.copy(alpha = 0.7f) else Color.Gray,
+                        modifier = Modifier.align(Alignment.End)
+                    )
+                }
+            }
         }
     }
 }
@@ -259,34 +260,44 @@ fun MessageInputBar(
     onSend: () -> Unit
 ) {
     Surface(
-        tonalElevation = 2.dp
+        tonalElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.navigationBarsPadding()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.Bottom
         ) {
             OutlinedTextField(
                 value = text,
                 onValueChange = onTextChange,
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Type a message...") },
-                shape = MaterialTheme.shapes.extraLarge,
-                maxLines = 3
+                placeholder = { Text("Message...", color = Color.Gray) },
+                shape = RoundedCornerShape(24.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Color.LightGray,
+                    focusedContainerColor = Color(0xFFFAFAFA),
+                    unfocusedContainerColor = Color(0xFFFAFAFA)
+                ),
+                maxLines = 4
             )
             
             Spacer(modifier = Modifier.width(8.dp))
             
             FloatingActionButton(
                 onClick = onSend,
-                modifier = Modifier.size(48.dp),
-                containerColor = MaterialTheme.colorScheme.primary
+                modifier = Modifier.size(50.dp).padding(bottom = 2.dp),
+                containerColor = MaterialTheme.colorScheme.primary,
+                elevation = FloatingActionButtonDefaults.elevation(0.dp)
             ) {
                 Icon(
                     Icons.Default.Send,
                     contentDescription = "Send",
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    tint = Color.White,
+                    modifier = Modifier.padding(start = 4.dp) // Optically center the send icon
                 )
             }
         }
