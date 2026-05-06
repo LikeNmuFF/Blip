@@ -235,7 +235,7 @@ class RoomViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.apiService.addRoomMember(
-                    roomId, AddMemberRequest(username)
+                    roomId, AddMemberRequest(listOf(username))
                 )
                 if (response.isSuccessful) {
                     onSuccess()

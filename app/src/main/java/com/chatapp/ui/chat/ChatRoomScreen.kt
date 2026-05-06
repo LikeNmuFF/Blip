@@ -33,6 +33,7 @@ import com.chatapp.data.model.Message
 import com.chatapp.data.network.SocketService
 import com.chatapp.ui.RoomViewModel
 import com.chatapp.ui.RoomViewModelFactory
+import com.chatapp.ui.components.BlipLogoCompact
 import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
@@ -102,57 +103,40 @@ fun ChatRoomScreen(
                 shadowElevation = 1.dp
             ) {
                 TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(Color(0xFF3B82F6), Color(0xFF06D6A0))
-                                        )
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = roomName.firstOrNull()?.uppercaseChar()?.toString() ?: "R",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = roomName.replaceFirstChar { it.uppercase() },
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    maxLines = 1
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (SocketService.instance.isConnected())
-                                                    Color(0xFF06D6A0)
-                                                else
-                                                    Color.Gray
-                                            )
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (SocketService.instance.isConnected()) "Online" else "Offline",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 10.sp,
-                                        color = if (SocketService.instance.isConnected()) Color(0xFF06D6A0) else Color.Gray
-                                    )
-                                }
-                            }
-                        }
-                    },
+                     title = {
+                         Row(verticalAlignment = Alignment.CenterVertically) {
+                             BlipLogoCompact(size = 32.dp)
+                             Spacer(modifier = Modifier.width(10.dp))
+                             Column {
+                                 Text(
+                                     text = roomName.replaceFirstChar { it.uppercase() },
+                                     fontWeight = FontWeight.Bold,
+                                     fontSize = 16.sp,
+                                     maxLines = 1
+                                 )
+                                 Row(verticalAlignment = Alignment.CenterVertically) {
+                                     Box(
+                                         modifier = Modifier
+                                             .size(6.dp)
+                                             .clip(CircleShape)
+                                             .background(
+                                                 if (SocketService.instance.isConnected())
+                                                     Color(0xFF06D6A0)
+                                                 else
+                                                     Color.Gray
+                                             )
+                                     )
+                                     Spacer(modifier = Modifier.width(4.dp))
+                                     Text(
+                                         text = if (SocketService.instance.isConnected()) "Online" else "Offline",
+                                         style = MaterialTheme.typography.bodySmall,
+                                         fontSize = 10.sp,
+                                         color = if (SocketService.instance.isConnected()) Color(0xFF06D6A0) else Color.Gray
+                                     )
+                                 }
+                             }
+                         }
+                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(

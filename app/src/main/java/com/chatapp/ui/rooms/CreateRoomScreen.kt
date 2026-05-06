@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.chatapp.data.local.ThemeManager
 import com.chatapp.data.model.User
 import com.chatapp.ui.RoomViewModel
+import com.chatapp.ui.components.BlipLogo
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -116,39 +117,37 @@ fun CreateRoomScreen(
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 // Header
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFF3B82F6), Color(0xFF06D6A0))
-                            )
-                        )
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            Icons.Default.Forum,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(44.dp)
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            "Start a Conversation",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        Text(
-                            "Create a room and invite others",
-                            color = Color.White.copy(alpha = 0.8f),
-                            fontSize = 13.sp
-                        )
-                    }
-                }
+                 Box(
+                     modifier = Modifier
+                         .fillMaxWidth()
+                         .clip(RoundedCornerShape(20.dp))
+                         .background(
+                             Brush.linearGradient(
+                                 colors = listOf(Color(0xFF3B82F6), Color(0xFF06D6A0))
+                             )
+                         )
+                         .padding(24.dp),
+                     contentAlignment = Alignment.Center
+                 ) {
+                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                         BlipLogo(
+                             size = 56.dp,
+                             animated = true
+                         )
+                         Spacer(modifier = Modifier.height(10.dp))
+                         Text(
+                             "Start a Conversation",
+                             color = Color.White,
+                             fontWeight = FontWeight.Bold,
+                             fontSize = 18.sp
+                         )
+                         Text(
+                             "Create a room and invite others",
+                             color = Color.White.copy(alpha = 0.8f),
+                             fontSize = 13.sp
+                         )
+                     }
+                 }
 
                 // Error
                 AnimatedVisibility(visible = state.createRoomError != null) {

@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chatapp.data.local.ThemeManager
 import com.chatapp.ui.AuthViewModel
 import com.chatapp.ui.AuthViewModelFactory
+import com.chatapp.ui.components.BlipLogo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,26 +116,11 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Logo / Brand
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(Color(0xFF3B82F6), Color(0xFF06D6A0))
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "B",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                    letterSpacing = (-1).sp
-                )
-            }
+            // Blip Logo
+            BlipLogo(
+                size = 80.dp,
+                animated = true
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 

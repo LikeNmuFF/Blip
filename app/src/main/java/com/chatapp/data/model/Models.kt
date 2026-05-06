@@ -106,5 +106,5 @@ data class ChangePasswordRequest(
 )
 
 data class AddMemberRequest(
-    val username: String
+    val usernames: List<String>
 )

@@ -36,6 +36,7 @@ import com.chatapp.data.model.Room
 import com.chatapp.data.model.User
 import com.chatapp.ui.RoomViewModel
 import com.chatapp.ui.RoomViewModelFactory
+import com.chatapp.ui.components.BlipLogoCompact
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,42 +73,24 @@ fun RoomListScreen(
             ) {
                 TopAppBar(
                     title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(
-                                        Brush.linearGradient(
-                                            colors = listOf(Color(0xFF3B82F6), Color(0xFF06D6A0))
-                                        )
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "B",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 18.sp,
-                                    letterSpacing = (-0.5).sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    "Blip",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = onSurfaceColor
-                                )
-                                Text(
-                                    "${state.rooms.size} room${if (state.rooms.size != 1) "s" else ""}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = onSurfaceVariantColor
-                                )
-                            }
-                        }
-                    },
+                         Row(verticalAlignment = Alignment.CenterVertically) {
+                             BlipLogoCompact(size = 36.dp)
+                             Spacer(modifier = Modifier.width(12.dp))
+                             Column {
+                                 Text(
+                                     "Blip",
+                                     fontWeight = FontWeight.Bold,
+                                     fontSize = 20.sp,
+                                     color = onSurfaceColor
+                                 )
+                                 Text(
+                                     "${state.rooms.size} room${if (state.rooms.size != 1) "s" else ""}",
+                                     style = MaterialTheme.typography.bodySmall,
+                                     color = onSurfaceVariantColor
+                                 )
+                             }
+                         }
+                     },
                     actions = {
                         IconButton(onClick = { viewModel.loadRooms() }) {
                             Icon(

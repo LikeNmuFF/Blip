@@ -48,7 +48,7 @@ interface ApiService {
     @PUT("/api/auth/password")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<Map<String, String>>
 
-    @POST("/api/rooms/{roomId}/members")
+    @POST("/api/rooms/{roomId}/invite")
     suspend fun addRoomMember(
         @Path("roomId") roomId: Int,
         @Body request: AddMemberRequest

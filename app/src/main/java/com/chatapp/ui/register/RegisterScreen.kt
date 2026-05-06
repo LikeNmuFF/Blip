@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chatapp.data.local.ThemeManager
 import com.chatapp.ui.AuthViewModel
 import com.chatapp.ui.AuthViewModelFactory
+import com.chatapp.ui.components.BlipLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,25 +109,11 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Logo
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(Color(0xFF06D6A0), Color(0xFF3B82F6))
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "+",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White
-                )
-            }
+            // Blip Logo
+            BlipLogo(
+                size = 64.dp,
+                animated = true
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
