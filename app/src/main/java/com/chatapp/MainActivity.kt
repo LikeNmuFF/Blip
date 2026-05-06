@@ -172,6 +172,7 @@ fun ChatApp() {
                 roomName = roomName,
                 isPrivate = isPrivate,
                 currentUser = authState.user,
+                currentUsername = authState.user?.username,
                 onBack = { navController.popBackStack() },
                 viewModel = roomViewModel
             )

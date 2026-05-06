@@ -46,6 +46,7 @@ fun ChatRoomScreen(
     roomName: String,
     isPrivate: Boolean = false,
     currentUser: User? = null,
+    currentUsername: String? = null,
     onBack: () -> Unit,
     viewModel: RoomViewModel = viewModel(
         factory = RoomViewModelFactory(LocalContext.current.applicationContext)
@@ -216,7 +217,12 @@ fun ChatRoomScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(state.messages) { message ->
-                         MessageBubble(message = message, currentUser = currentUser, isDark = isDark)
+                         MessageBubble(
+                             message = message,
+                             currentUserId = currentUser?.id ?: -1,
+                             currentUsername = currentUsername ?: "",
+                             isDark = isDark
+                         )
                      }
                 }
             }
@@ -307,8 +313,14 @@ fun ChatRoomScreen(
 }
 
 @Composable
-fun MessageBubble(message: Message, currentUser: User? = null, isDark: Boolean = false) {
-    val isMe = currentUser != null && message.userId == currentUser.id
+fun MessageBubble(
+    message: Message,
+    currentUserId: Int = -1,
+    currentUsername: String = "",
+    isDark: Boolean = false
+) {
+    val isMe = (currentUserId != -1 && message.userId == currentUserId) ||
+               (currentUsername.isNotEmpty() && message.username.equals(currentUsername, ignoreCase = true))
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val maxBubbleWidth = screenWidth * 0.75f
 
