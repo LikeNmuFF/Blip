@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.WifiOff
@@ -92,31 +93,38 @@ fun RoomListScreen(
                          }
                      },
                     actions = {
-                        IconButton(onClick = { viewModel.loadRooms() }) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh",
-                                tint = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB)
-                            )
-                        }
-                        IconButton(onClick = {
-                            viewModel.resetCreateRoomState()
-                            onCreateRoom()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Create Room",
-                                tint = if (isDark) Color(0xFF06D6A0) else Color(0xFF06D6A0)
-                            )
-                        }
-                        IconButton(onClick = onLogout) {
-                            Icon(
-                                imageVector = Icons.Default.ExitToApp,
-                                contentDescription = "Logout",
-                                tint = if (isDark) Color(0xFFF87171) else Color(0xFFEF4444)
-                            )
-                        }
-                    },
+                         IconButton(onClick = { viewModel.loadRooms() }) {
+                             Icon(
+                                 imageVector = Icons.Default.Refresh,
+                                 contentDescription = "Refresh",
+                                 tint = if (isDark) Color(0xFF3B82F6) else Color(0xFF2563EB)
+                             )
+                         }
+                         IconButton(onClick = {
+                             viewModel.resetCreateRoomState()
+                             onCreateRoom()
+                         }) {
+                             Icon(
+                                 imageVector = Icons.Default.Add,
+                                 contentDescription = "Create Room",
+                                 tint = if (isDark) Color(0xFF06D6A0) else Color(0xFF06D6A0)
+                             )
+                         }
+                         IconButton(onClick = onProfileClick) {
+                             Icon(
+                                 imageVector = Icons.Default.Person,
+                                 contentDescription = "Profile",
+                                 tint = if (isDark) Color(0xFF60A5FA) else Color(0xFF3B82F6)
+                             )
+                         }
+                         IconButton(onClick = onLogout) {
+                             Icon(
+                                 imageVector = Icons.Default.ExitToApp,
+                                 contentDescription = "Logout",
+                                 tint = if (isDark) Color(0xFFF87171) else Color(0xFFEF4444)
+                             )
+                         }
+                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = surfaceColor
                     )

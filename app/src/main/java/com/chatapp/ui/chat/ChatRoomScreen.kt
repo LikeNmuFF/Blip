@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chatapp.data.local.ThemeManager
 import com.chatapp.data.local.TokenStorage
 import com.chatapp.data.model.Message
+import com.chatapp.data.model.User
 import com.chatapp.data.network.SocketService
 import com.chatapp.ui.RoomViewModel
 import com.chatapp.ui.RoomViewModelFactory
@@ -44,6 +45,7 @@ fun ChatRoomScreen(
     roomId: Int,
     roomName: String,
     isPrivate: Boolean = false,
+    currentUser: User? = null,
     onBack: () -> Unit,
     viewModel: RoomViewModel = viewModel(
         factory = RoomViewModelFactory(LocalContext.current.applicationContext)
@@ -214,8 +216,8 @@ fun ChatRoomScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(state.messages) { message ->
-                        MessageBubble(message = message, isDark = isDark)
-                    }
+                         MessageBubble(message = message, currentUser = currentUser, isDark = isDark)
+                     }
                 }
             }
 
@@ -305,9 +307,8 @@ fun ChatRoomScreen(
 }
 
 @Composable
-fun MessageBubble(message: Message, isDark: Boolean = false) {
-    val currentUserId = remember { -1 }
-    val isMe = message.userId == currentUserId
+fun MessageBubble(message: Message, currentUser: User? = null, isDark: Boolean = false) {
+    val isMe = currentUser != null && message.userId == currentUser.id
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val maxBubbleWidth = screenWidth * 0.75f
 
