@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.chatapp.data.local.TokenStorage
 import com.chatapp.data.network.RetrofitClient
 import com.chatapp.data.network.SocketService
+import com.chatapp.data.notification.NotificationManagerService
 import com.chatapp.ui.AuthViewModel
 import com.chatapp.ui.AuthViewModelFactory
 import com.chatapp.ui.RoomViewModel
@@ -42,6 +43,9 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         RetrofitClient.init(this)
+        
+        // Initialize notification channel
+        NotificationManagerService.createNotificationChannel(this)
 
         runBlocking {
             val token = TokenStorage(this@MainActivity).token.first()

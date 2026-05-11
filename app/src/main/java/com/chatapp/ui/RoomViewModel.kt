@@ -7,6 +7,7 @@ import com.chatapp.data.local.TokenStorage
 import com.chatapp.data.model.*
 import com.chatapp.data.network.RetrofitClient
 import com.chatapp.data.network.SocketService
+import com.chatapp.data.notification.NotificationManagerService
 import io.socket.emitter.Emitter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -115,6 +116,14 @@ class RoomViewModel(private val context: Context) : ViewModel() {
                     if (!currentMessages.any { it.id == message.id }) {
                         currentMessages.add(message)
                         _state.value = _state.value.copy(messages = currentMessages)
+                        
+                        // Show notification for new message
+                        NotificationManagerService.showMessageNotification(
+                            context = context,
+                            title = message.username,
+                            message = message.content,
+                            username = message.username
+                        )
                     }
                 }
             } catch (e: Exception) {
